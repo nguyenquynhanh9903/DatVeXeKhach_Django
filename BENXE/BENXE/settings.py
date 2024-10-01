@@ -26,7 +26,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['172.45.20.76']
 
-APPEND_SLASH = True
 
 # Application definition
 
@@ -100,7 +99,7 @@ WSGI_APPLICATION = 'BENXE.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'benxeapi',
+        'NAME': 'benxe',
         'USER': 'root',
         'PASSWORD': 'Admin@123',
         'HOST': ''  # mặc định localhost
@@ -154,10 +153,25 @@ CORS_ALLOWED_ORIGINS = [
     "http://127.0.0.1:8000",
 ]
 
-CORS_ALLOW_CREDENTIALS = True
-CORS_ALLOW_METHODS = ['GET', 'POST', 'PUT', 'DELETE']
+# Hoặc cho phép tất cả các nguồn gốc trong môi trường phát triển
+CORS_ALLOW_ALL_ORIGINS = True
 
-CLIENT_ID = 'soVvyOundObf8QKoPdtmuJ7FH1BiJVdJrIZc0XyI'
-CLIENT_SECRET = '2pJvXYrVbDLriOP43IDFcsOHJR8HprY2PbKQ07RvXTQeCmeNWfdBGN8dqPWT93wk66Z44rLwKoQXxd9H0nbh5Yy60UyxO0ZVzJhhevcNU2gQ7MpzJl7eqnHT6dM2UOlp'
+# Đảm bảo rằng các phương thức và tiêu đề được cho phép
+CORS_ALLOW_METHODS = [
+    'GET',
+    'POST',
+    'PUT',
+    'PATCH',
+    'DELETE',
+    'OPTIONS',
+]
 
+CORS_ALLOW_HEADERS = [
+    'content-type',
+    'Authorization',
+    'amount',
+]
+
+CLIENT_ID = '7oJZaD3IKTDWLcHb7tJGy9aYHdDHCTWtdnX5DMwu'
+CLINET_SECRET = 'Dd7FfqIbMImybLvHJHHc9PShSVkUeIo45Si8gTnQkluOnpzcelMrDyn1vOSlV4to7A4G0Rf4VU9Ub2tLIRf91qW3vEZeROGEQ7eRiB49wvgYNaQi0mRCHtGOnPZlmRXs'
 

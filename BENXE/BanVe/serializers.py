@@ -12,12 +12,12 @@ class ItemSerializer(serializers.ModelSerializer):
 class KhachHangSerializer(ItemSerializer):
     class Meta:
         model = KhachHang
-        fields = ['id', 'Ten_KH', 'NgaySinh', 'GioiTinh', 'DiaChi', 'CMND', 'DienThoai', 'Email', 'avatar', 'Loai_KH']
+        fields = '__all__'
 
 class TaiXeSerializer(ItemSerializer):
     class Meta:
         model = TaiXe
-        fields = ['id', 'Ten_taixe', 'DiaChi', 'GioiTinh', 'NgaySinh', 'CMND', 'DienThoai', 'Email', 'avatar']
+        fields = '__all__'
 
 class TuyenXeSerializer(serializers.ModelSerializer):
     class Meta:
@@ -63,14 +63,12 @@ class UserSerializer(ItemSerializer):
 class NhanVienSerializer(ItemSerializer):
     class Meta:
         model = NhanVien
-        fields = ['id', 'Ten_NV', 'NgaySinh', 'GioiTinh', 'DiaChi', 'CMND',
-                  'DienThoai', 'Email', 'avatar']
+        fields = '__all__'
 
 class ThemNhanVienSerializer(ItemSerializer):
     class Meta:
         model = NhanVien
-        fields = ['Ten_NV', 'NgaySinh', 'GioiTinh', 'DiaChi', 'CMND',
-                  'DienThoai', 'Email', 'avatar']
+        fields = '__all__'
         extra_kwargs = {
             'id': {'required': False}
         }

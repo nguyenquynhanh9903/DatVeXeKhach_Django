@@ -6,9 +6,8 @@ from django.template.response import TemplateResponse
 from datetime import datetime, timedelta
 from django.db.models.functions import ExtractMonth, ExtractQuarter, ExtractYear
 
-
-from .models import NhanVien, KhachHang, LoaiXe, Loai_ghe, TaiXe, Xe, Ghe, TuyenXe, ChuyenXe, \
-    Ve_Xe, Chi_Tiet_Ve_Xe, Comment, Like, User, LoaiNguoiDung, Loai_NV, LoaiKhachHang
+from .models import NhanVien, KhachHang, TaiXe, Xe, Ghe, TuyenXe, ChuyenXe, \
+    Ve_Xe, Chi_Tiet_Ve_Xe, User, NgayLe, Loai_ghe, LoaiXe, Loai_NV, LoaiKhachHang
 
 
 def thong_ke_doanh_thu_theo_thang(nam):
@@ -108,20 +107,18 @@ class TaiXeAdmin(admin.ModelAdmin):
 
 
 # Nhanvien ở đây là tên bảng
-admin.site.register(NhanVien, NhanVienAdmin)
-admin.site.register(KhachHang, KhachHangAdmin)
-admin.site.register(TaiXe, TaiXeAdmin)
-admin.site.register(TuyenXe)
-admin.site.register(ChuyenXe)
-admin.site.register(LoaiXe)
-admin.site.register(Loai_ghe)
-admin.site.register(Xe)
-admin.site.register(Ghe)
-admin.site.register(Comment)
-admin.site.register(Like)
-admin.site.register(Ve_Xe)
-admin.site.register(Chi_Tiet_Ve_Xe)
-admin.site.register(User)
-admin.site.register(LoaiNguoiDung)
-admin.site.register(LoaiKhachHang)
-admin.site.register(Loai_NV)
+admin_site.register(NhanVien, NhanVienAdmin)
+admin_site.register(KhachHang, KhachHangAdmin)
+admin_site.register(TaiXe, TaiXeAdmin)
+admin_site.register(TuyenXe)
+admin_site.register(ChuyenXe)
+admin_site.register(Xe)
+admin_site.register(Ghe)
+admin_site.register(Ve_Xe)
+admin_site.register(Chi_Tiet_Ve_Xe)
+admin_site.register(User)
+admin_site.register(NgayLe)
+admin_site.register(Loai_ghe)
+admin_site.register(Loai_NV)
+admin_site.register(LoaiKhachHang)
+admin_site.register(LoaiXe)

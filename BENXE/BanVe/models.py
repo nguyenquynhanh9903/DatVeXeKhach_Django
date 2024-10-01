@@ -19,7 +19,7 @@ class LoaiNguoiDung(BaseModel):
 
 
 class User(AbstractUser):
-    Loai_NguoiDung = models.CharField(max_length=255, default=1)
+    Loai_NguoiDung = models.ForeignKey(LoaiNguoiDung, on_delete=models.PROTECT, default=1, related_name='user')
     avatar = CloudinaryField(null=True)
 
 
@@ -41,6 +41,7 @@ class NhanVien(BaseModel):
     Email = models.EmailField(max_length=255)
     Loai_NV = models.ForeignKey(Loai_NV, on_delete=models.PROTECT, default=1)
     avatar = CloudinaryField(null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.Ten_NV
@@ -63,6 +64,7 @@ class KhachHang(BaseModel):
     DienThoai = models.CharField(max_length=255)
     Email = models.EmailField(max_length=255)
     avatar = CloudinaryField(null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.Ten_KH
@@ -77,6 +79,7 @@ class TaiXe(BaseModel):
     DienThoai = models.CharField(max_length=255)
     Email = models.EmailField(max_length=255)
     avatar = CloudinaryField(null=True)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
     def __str__(self):
         return str(self.Ten_taixe)
@@ -151,7 +154,6 @@ class Interaction(BaseModel):
 
     class Meta:
         abstract = True
-
 
 class Comment(Interaction):
     content = models.CharField(max_length=255)

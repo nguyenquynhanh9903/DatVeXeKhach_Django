@@ -10,10 +10,10 @@ from .models import (NhanVien, KhachHang, TaiXe,
                      ChuyenXe, TuyenXe, Ve_Xe, Chi_Tiet_Ve_Xe, User, Like, Comment, Ghe, Xe, Khach_di, NgayLe, LoaiNguoiDung)
 from . import serializers, paginators
 from . import prems
-
 import hashlib
 from django.http import JsonResponse, HttpRequest
 import json
+import base64
 import requests
 import hmac
 import random
@@ -23,10 +23,9 @@ import urllib.parse
 
 
 
-def start_django_server():
-    # Khởi động lại máy chủ Django
-    restart_command = 'python manage.py runserver 192.168.1.111:8000'
-    subprocess.Popen(restart_command, shell=True)
+class IsAdminUserOrReadOnly(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return request.user and request.user.is_staff
 
 
 # Admin quản lý(thêm/xoá/sửa/tìm kiếm) chuyến xe, tuyến xe, nhân viên, tài xế công ty
@@ -34,40 +33,37 @@ class NhanVienViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = NhanVien.object.filter(active=True)
     serializer_class = serializers.NhanVienSerializer
     pagination_class = paginators.ChiaTrangPaginator
+    permission_classes = [IsAdminUserOrReadOnly]
 
     def get_queryset(self):
         queryset = self.queryset
         ma_nhanvien = self.request.query_params.get('ma_nhanvien')
         q = self.request.query_params.get('q')
-
         if ma_nhanvien:
             queryset = queryset.filter(id=ma_nhanvien)
-
         if q:
             queryset = queryset.filter(Ten_NV__icontains=q)
 
         return queryset
 
-    @action(methods=['get'], url_path='NhanVien', detail=True)
+    @action(methods=['get'], url_path='NhanVien', detail=True, permission_classes=[IsAdminUserOrReadOnly])
     def get_NhanVien(self, request, pk):
         nhanvien = self.get_object().nhanvien_set.filter(active=True)
         return Response(serializers.NhanVienSerializer(nhanvien, many=True).data,
                         status=status.HTTP_200_OK)
 
 
-    @action(methods=['post'], url_path='Them_NV', detail=False)
+    @action(methods=['post'], url_path='Them_NV', detail=False, permission_classes=[IsAdminUserOrReadOnly])
     def them_NV(self, request):
-        # Loại bỏ trường ID từ dữ liệu yêu cầu
         if 'id' in request.data:
             del request.data['id']
-
         nhanvien = serializers.ThemNhanVienSerializer(data=request.data)
         if nhanvien.is_valid():
             nhanvien.save()
             return Response(nhanvien.data, status=status.HTTP_201_CREATED)
         return Response(nhanvien.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['delete'], url_path='Xoa_NV', detail=True)
+    @action(methods=['delete'], url_path='Xoa_NV', detail=True, permission_classes=[IsAdminUserOrReadOnly])
     def Xoa_NV(self, request, pk):
 
         ma_nhanvien = NhanVien.object.get(id=pk)
@@ -87,7 +83,6 @@ class NhanVienViewSet(viewsets.ViewSet, generics.ListAPIView):
         serializer = serializers.NhanVienSerializer(nhanvien, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            start_django_server()
             return Response(serializer.data, status=status.HTTP_200_OK)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -96,6 +91,7 @@ class KhachHangViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = KhachHang.object.filter(active=True)
     pagination_class = paginators.ChiaTrangPaginator
     serializer_class = serializers.KhachHangSerializer
+    permission_classes = [IsAdminUserOrReadOnly]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -122,7 +118,6 @@ class KhachHangViewSet(viewsets.ViewSet, generics.ListAPIView):
 
     @action(methods=['delete'], url_path='Xoa_KH', detail=True)
     def Xoa_KH(self, request, pk):
-
         ma_khachhang = KhachHang.object.get(id=pk)
         if ma_khachhang:
             ma_khachhang.delete()
@@ -139,7 +134,6 @@ class KhachHangViewSet(viewsets.ViewSet, generics.ListAPIView):
         serializer = serializers.KhachHangSerializer(khachhang, data=request.data)
         if serializer.is_valid():
             serializer.save()
-            start_django_server()
             return Response(serializer.data, status=status.HTTP_200_OK)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -147,6 +141,7 @@ class TaiXeViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = TaiXe.object.filter(active=True)
     pagination_class = paginators.ChiaTrangPaginator
     serializer_class = serializers.TaiXeSerializer
+    permission_classes = [IsAdminUserOrReadOnly]
 
     def get_queryset(self):
         queryset = self.queryset
@@ -161,7 +156,7 @@ class TaiXeViewSet(viewsets.ViewSet, generics.ListAPIView):
 
         return queryset
 
-    @action(methods=['post'], url_path='Them_TX', detail=False)
+    @action(methods=['post'], url_path='Them_TX', detail=False, permission_classes = [IsAdminUserOrReadOnly])
     def them_TX(self, request):
         taixe= serializers.TaiXeSerializer(data=request.data)
 
@@ -170,7 +165,7 @@ class TaiXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(taixe.data, status=status.HTTP_201_CREATED)
         return Response(taixe.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['delete'], url_path='Xoa_TX', detail=True)
+    @action(methods=['delete'], url_path='Xoa_TX', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Xoa_TX(self, request, pk):
         ma_taixe = TaiXe.object.get(id=pk)
         if ma_taixe:
@@ -178,7 +173,7 @@ class TaiXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['put'], url_path='Sua_TX', detail=True)
+    @action(methods=['put'], url_path='Sua_TX', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Sua_TX(self, request, pk):
         try:
             taixe = TaiXe.object.get(id=pk)
@@ -221,7 +216,7 @@ class TuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
         return queryset
 
 
-    @action(methods=['post'], url_path='Them_TuyenXe', detail=False)
+    @action(methods=['post'], url_path='Them_TuyenXe', detail=False, permission_classes = [IsAdminUserOrReadOnly])
     def them_TuyenXe(self, request):
         tuyenxe = serializers.TuyenXeSerializer(data=request.data)
 
@@ -230,7 +225,7 @@ class TuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(tuyenxe.data, status=status.HTTP_201_CREATED)
         return Response(tuyenxe.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['delete'], url_path='Xoa_TuyenXe', detail=True)
+    @action(methods=['delete'], url_path='Xoa_TuyenXe', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Xoa_TuyenXe(self, request, pk):
         matuyenxe = TuyenXe.object.get(id=pk)
         if matuyenxe:
@@ -238,7 +233,7 @@ class TuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['put'], url_path='Sua_TuyenXe', detail=True)
+    @action(methods=['put'], url_path='Sua_TuyenXe', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Sua_TuyenXe(self, request, pk):
         try:
             tuyenxe = TuyenXe.object.get(id=pk)
@@ -279,7 +274,7 @@ class ChuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
         return queryset
 
 
-    @action(methods=['post'], url_path='Them_ChuyenXe', detail=False)
+    @action(methods=['post'], url_path='Them_ChuyenXe', detail=False, permission_classes = [IsAdminUserOrReadOnly])
     def them_ChuyenXe(self, request):
         chuyenxe = serializers.ChuyenXeSerializer(data=request.data)
 
@@ -288,7 +283,7 @@ class ChuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(chuyenxe.data, status=status.HTTP_201_CREATED)
         return Response(chuyenxe.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['delete'], url_path='Xoa_ChuyenXe', detail=True)
+    @action(methods=['delete'], url_path='Xoa_ChuyenXe', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Xoa_ChuyenXe(self, request, pk):
         machuyenxe = ChuyenXe.object.get(id=pk)
         if machuyenxe:
@@ -296,7 +291,7 @@ class ChuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         return Response(status=status.HTTP_400_BAD_REQUEST)
 
-    @action(methods=['put'], url_path='Capnhat_ChuyenXe', detail=True)
+    @action(methods=['put'], url_path='Capnhat_ChuyenXe', detail=True, permission_classes = [IsAdminUserOrReadOnly])
     def Sua_ChuyenXe(self, request, pk):
         try:
             chuyenxe = ChuyenXe.object.get(id=pk)
@@ -313,7 +308,6 @@ class ChuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
     @action(methods=['get'], url_path='comments', detail=True)
     def get_comments(self, request, pk):
         comments = self.get_object().comment_set.select_related('user').order_by('-id')
-
         paginator = paginators.ChiaTrangPaginator()
         page = paginator.paginate_queryset(comments, request)
         if page is not None:
@@ -345,6 +339,7 @@ class ChuyenXeViewSet(viewsets.ViewSet, generics.ListAPIView):
 class VeXeViewSet(viewsets.ViewSet, generics.ListAPIView):
     queryset = Ve_Xe.object.filter(active=True)
     serializer_class = serializers.VeXeSerializer
+    pagination_class = paginators.ChiaTrangPaginator
 
     def get_queryset(self):
         queryset = self.queryset
@@ -381,6 +376,14 @@ class VeXeViewSet(viewsets.ViewSet, generics.ListAPIView):
         )
         return Response(serializers.Chi_Tiet_Ve_XeSerializer(c).data, status=status.HTTP_201_CREATED)
 
+    @action(methods=['delete'], url_path='Xoa_VeXe', detail=True, permission_classes=[IsAdminUserOrReadOnly])
+    def Xoa_VeXe(self, request, pk):
+        ma_ve = Ve_Xe.object.get(id=pk)
+        if ma_ve:
+            ma_ve.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
 
 
 class ChiTietVeXeViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -405,6 +408,11 @@ class UserViewSet(viewsets.ViewSet, generics.CreateAPIView):
 
         return [permissions.AllowAny()]
 
+    @action(methods=['get'], url_path='list_user', detail=False)
+    def list_users(self, request):
+        queryset = self.queryset
+        serializer = self.serializer_class(queryset, many=True)
+        return Response(serializer.data)
 
     @action(methods=['get', 'patch'], url_path='current_user', detail=False)
     def current_user(self, request):
@@ -453,7 +461,7 @@ class GheViewSet(viewsets.ViewSet, generics.ListAPIView):
             serializer = self.serializer_class(instance)
             return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            return Response({"message": "No data provided for update"}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({"message": "Update không thành công !"}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class XeViewSet(viewsets.ViewSet, generics.ListAPIView):
@@ -599,7 +607,8 @@ def create_payment(request):
             "description": "Thanh Toán Vé Xe #" + str(transID),
             "bank_code": "",
         }
-# Tạo chuỗi dữ liệu và mã hóa HMAC
+
+        # Tạo chuỗi dữ liệu và mã hóa HMAC
         data = "{}|{}|{}|{}|{}|{}|{}".format(order["app_id"], order["app_trans_id"], order["app_user"],
                                              order["amount"], order["app_time"], order["embed_data"], order["item"])
         order["mac"] = hmac.new(config['key1'].encode(), data.encode(), hashlib.sha256).hexdigest()
@@ -613,3 +622,53 @@ def create_payment(request):
             return JsonResponse({"error": str(e)})
     else:
         return JsonResponse({"error": "Only POST requests are allowed"})
+
+
+
+# @csrf_exempt
+# def payment_view(request: HttpRequest):
+#     accessKey = 'F8BBA842ECF85'
+#     secretKey = 'K951B6PE1waDMi640xX08PD3vg6EkVlz'
+#     orderInfo = 'pay with MoMo'
+#     partnerCode = 'MOMO'
+#     redirectUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b'
+#     ipnUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b'
+#     requestType = "payWithMethod"
+#     amount = request.headers.get('amount', '')  # Lấy amount từ header
+#     orderId = partnerCode + str(int(time.time() * 1000))
+#     requestId = orderId
+#     extraData = ''
+#     orderGroupId = ''
+#     autoCapture = True
+#     autoCapture = True
+#     lang = 'vi'
+#
+#     # Tạo chuỗi signature
+#     rawSignature = f"accessKey={accessKey}&amount={amount}&extraData={extraData}&ipnUrl={ipnUrl}&orderId={orderId}&orderInfo={orderInfo}&partnerCode={partnerCode}&redirectUrl={redirectUrl}&requestId={requestId}&requestType={requestType}"
+#     signature = hmac.new(secretKey.encode(), rawSignature.encode(), hashlib.sha256).hexdigest()
+#
+#     # Tạo request body
+#     data = {
+#         "partnerCode": partnerCode,
+#         "partnerName": "Test",
+#         "storeId": "MomoTestStore",
+#         "requestId": requestId,
+#         "amount": amount,
+#         "orderId": orderId,
+#         "orderInfo": orderInfo,
+#         "redirectUrl": redirectUrl,
+#         "ipnUrl": ipnUrl,
+#         "lang": lang,
+#         "requestType": requestType,
+#         "autoCapture": autoCapture,
+#         "extraData": extraData,
+#         "orderGroupId": orderGroupId,
+#         "signature": signature
+#     }
+#
+#     # Gửi request đến MoMo
+#     response = requests.post('https://test-payment.momo.vn/v2/gateway/api/create', json=data)
+#     response_data = response.json()
+#     pay_url = response_data.get('payUrl')
+#
+#     return JsonResponse(response_data)
